@@ -2,6 +2,7 @@
 
 import os
 import os.path as osp
+import math
 
 import wx
 
@@ -70,7 +71,7 @@ class MainWindow(wx.Frame):
 		self.dirname = os.getcwd()
 
 		# Update the title
-		self.title = 'Image Decomposition'
+		self.title = 'Wavedec'
 
 		# Set up the menu
 		self.setup_menu()
@@ -119,7 +120,12 @@ class MainWindow(wx.Frame):
 		opt_haar = wave_menu.AppendRadioItem(-1, "haar")
 		opt_db3  = wave_menu.AppendRadioItem(-1, "db3")
 		opt_db5  = wave_menu.AppendRadioItem(-1, "db5")
-		opt_cdf  = wave_menu.AppendRadioItem(-1, "cdf 9/7")
+		opt_bior22  = wave_menu.AppendRadioItem(-1, "bior 2.2")
+		opt_bior44  = wave_menu.AppendRadioItem(-1, "bior 4.4")
+
+		wave_menu.AppendSeparator()
+		opt_haar2 = wave_menu.AppendRadioItem(-1, "haar *")
+		opt_cdf97  = wave_menu.AppendRadioItem(-1, "cdf 9/7")
 
 		# Help menu
 		help_menu = wx.Menu()
@@ -144,7 +150,11 @@ class MainWindow(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.option_builder('haar'), opt_haar)
 		self.Bind(wx.EVT_MENU, self.option_builder('db3'), opt_db3)
 		self.Bind(wx.EVT_MENU, self.option_builder('db5'), opt_db5)
-		self.Bind(wx.EVT_MENU, self.option_builder('cdf'), opt_cdf)
+		self.Bind(wx.EVT_MENU, self.option_builder('bior2.2'), opt_bior22)
+		self.Bind(wx.EVT_MENU, self.option_builder('bior4.4'), opt_bior44)
+
+		self.Bind(wx.EVT_MENU, self.option_builder('haar*'), opt_haar2)
+		self.Bind(wx.EVT_MENU, self.option_builder('cdf9/7'), opt_cdf97)
 
 
 	# Status property (and triggers)
@@ -183,8 +193,10 @@ class MainWindow(wx.Frame):
 				m.Enable(True)
 			self.menu_reset.Enable(True)
 			self.menu_save.Enable(True)
+
+			max_level = math.log(max(self.img_work.GetWidth(), self.img_work.GetHeight()), 2)
 			self.menu_prev.Enable(self.process_level > 0)
-			self.menu_next.Enable(self.process_level < 99)
+			self.menu_next.Enable(self.process_level < max_level)
 
 
 	@staticmethod
@@ -211,6 +223,13 @@ class MainWindow(wx.Frame):
 
 		return '|'.join(res)
 
+	def filters(self):
+		return self.dialog_filters({
+			'Bitmap files': 'bmp',
+			'GIF files': 'gif',
+			'JPEG files': ('jpg', 'jpeg', 'jpe'),
+			'PNG files': 'png',
+			}, add_all='All Image files')
 
 	# Generic event handlers for the RadioItem menu (Wavelet selection)
 	def option_builder(self, name):
@@ -226,16 +245,9 @@ class MainWindow(wx.Frame):
 	# Event handlers
 	def on_open(self, e):
 		""" Open action dialog """
-
-		filters = self.dialog_filters({
-			'Bitmap files': 'bmp',
-			'GIF files': 'gif',
-			'JPEG files': ('jpg', 'jpeg', 'jpe'),
-			'PNG files': 'png',
-			}, add_all='All Image files')
-
 		dlg = wx.FileDialog(self, message='Choose a file', defaultDir=self.dirname,
-				defaultFile='', wildcard=filters, style=wx.OPEN)
+				defaultFile='', wildcard=self.filters(), style=wx.OPEN)
+
 		if dlg.ShowModal() == wx.ID_OK:
 			self.open_image(dlg.GetPath())
 		dlg.Destroy()
@@ -254,11 +266,10 @@ class MainWindow(wx.Frame):
 	def on_reset(self, e):
 		self.image_reset('Image reset successfully')
 
-
 	def on_save(self, e):
 		""" Save action dialog """
 		dlg = wx.FileDialog(self, message="Choose a destination", defaultDir=self.dirname,
-				style=wx.SAVE | wx.OVERWRITE_PROMPT)
+				wildcard=self.filters(), style=wx.SAVE | wx.OVERWRITE_PROMPT)
 
 		# Show the dialog and get user input
 		if dlg.ShowModal() == wx.ID_OK:
@@ -274,16 +285,15 @@ class MainWindow(wx.Frame):
 
 	def on_about(self, e):
 		""" About action """
+		license = osp.join(osp.dirname(__file__), 'license.txt')
 
-		dlg = wx.MessageDialog(self,
-				message="PROIECT DE LICENTA\n\ncoordonat de\n<adrian@galaxyng.com>",
-				caption='About %s' % self.title,
-				style=wx.OK)
-
-		# Show the dialog box (modal - blocks for user input)
-		dlg.ShowModal()
-		dlg.Destroy()
-
+		info = wx.AboutDialogInfo()
+		info.SetName('wavedec')
+		info.SetVersion('0.1')
+		info.SetLicense(open(license).read())
+		info.SetWebSite('alex.cepoi@gmail.com')
+		info.AddDeveloper('Alexandru Cepoi')
+		wx.AboutBox(info)
 
 	def open_image(self, path):
 		# Save path data for the current image
@@ -291,6 +301,7 @@ class MainWindow(wx.Frame):
 
 		# Load the image original (auto-detect file type)
 		self.img_orig = wx.Image(path, wx.BITMAP_TYPE_ANY, -1)
+		self.img_orig = self.img_orig.ConvertToGreyscale()
 		self.imgbox_orig.set_image(self.img_orig)
 
 		# Reset the processing status

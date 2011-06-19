@@ -1,0 +1,11 @@
+wp = pywt.WaveletPacket2D(data=None, wavelet=wavelet)
+
+# low freq
+wp['a'*level] = subbands[0]
+
+# high freqs
+for i in xrange(1,level+1):
+	wp['a'*(level-i) + 'h'] = subbands[i][0]
+	wp['a'*(level-i) + 'v'] = subbands[i][1]
+
+return wp.reconstruct(update=False)

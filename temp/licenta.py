@@ -216,7 +216,6 @@ if __name__ == "__main__":
 	a = m[:128][:128]
 	b = m[128:256,128:256]
 	c = m[256:512, 256:512]
-	asdas
 	im.save("lena_fwt.png") # Save the transformed image.
 
 	# Perform an inverse transform:
