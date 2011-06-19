@@ -60,7 +60,6 @@ class ImageBox(wx.Window):
 		return (new_w, new_h)
 
 
-
 class MainWindow(wx.Frame):
 	def __init__(self, parent=None, id=wx.ID_ANY, pos=wx.DefaultPosition):
 
@@ -116,7 +115,6 @@ class MainWindow(wx.Frame):
 
 		# Wavelet menu
 		self.wave_menu = wave_menu = wx.Menu()
-		self.wavelet = 'haar'
 		opt_haar = wave_menu.AppendRadioItem(-1, "haar")
 		opt_db3  = wave_menu.AppendRadioItem(-1, "db3")
 		opt_db5  = wave_menu.AppendRadioItem(-1, "db5")
@@ -124,8 +122,12 @@ class MainWindow(wx.Frame):
 		opt_bior44  = wave_menu.AppendRadioItem(-1, "bior 4.4")
 
 		wave_menu.AppendSeparator()
-		opt_haar2 = wave_menu.AppendRadioItem(-1, "haar *")
+		opt_haar2 = wave_menu.AppendRadioItem(1, "haar*")
 		opt_cdf97  = wave_menu.AppendRadioItem(-1, "cdf 9/7")
+
+		# default
+		self.wavelet = 'haar*'
+		wave_menu.Check(1, True)
 
 		# Help menu
 		help_menu = wx.Menu()
@@ -333,5 +335,6 @@ class Application(wx.App):
 		return True
 
 
-app = Application(False, None)
-app.MainLoop()
+if __name__ == '__main__':
+	app = Application(False, None)
+	app.MainLoop()

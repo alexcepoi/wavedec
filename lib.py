@@ -10,12 +10,12 @@ def transform(image, wavelet='haar', level=1):
 	img.fromstring( image.GetData() )
 
 	# preprocess
-	print ' * transform with <%s> level %d' % (wavelet, level)
 	img = img.convert('L')
 	buf = np.array(img)
 
 	# process
 	buf = process(buf, wavelet, level)
+	print ' * transformed with <%s> level %d' % (wavelet, level)
 
 	# postprocess
 	img = Image.fromarray(buf)
@@ -64,5 +64,5 @@ def save(image, path):
 
 	# save image
 	img.save(path)
-	print ' * save to %s' % path
+	print ' * saved to %s' % path
 
